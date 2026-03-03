@@ -1,0 +1,140 @@
+---
+title: "tarea1"
+output: html_document
+date: "2026-03-02"
+---
+
+```{r}
+# A mayor inversión en desarrollo, +  patentes
+
+library(plm)
+library(dplyr)
+library(ggplot2)
+library(readxl)
+
+```
+
+```{r}
+library(readxl)
+df <- read_excel(file.choose())
+```
+
+```{r}
+head(df)
+```
+
+
+```{r}
+colSums(is.na(df))
+```
+
+```{r}
+#Fija semillas para que todos tengan los mismos resultados 
+set.seed(123)
+```
+
+```{r}
+summary(df)
+sd(df$rnd, na.rm = TRUE)
+mean(df$rnd, na.rm = TRUE)
+
+```
+
+```{r}
+
+#DF
+##panel_df <- data.frame(cusip, año, patentes, inversion, ventas, empleados)
+
+panel_df <- df[complete.cases(df[, c("cusip","year","patents","rnd","sales","employ")]), ]
+
+#1 filas 
+head(panel_df)
+
+#Summary estadistico
+summary(panel_df)
+
+
+# R: 
+# cusip = individuo
+# year = tiempo 
+
+
+library(plm)
+
+pdata <-pdata.frame(panel_df, index=c ("cusip","year"))
+
+
+
+#m 1: POOLED OLS 
+
+
+#Este modelo ignora los modelos panel
+ 
+
+m_pool <-plm(patents ~ rnd + sales + employ,
+             data=pdata,
+             model="pooling")
+
+summary(m_pool)
+
+#Hipotesis esperada: 
+# -> negativo
+## ->  positivo 
+# -> positivo
+
+#10)#M 2 Efectos fijos
+
+#controla caracteristicas de NO camian en el tiempo 
+#Ejemplo:
+
+##
+#
+
+m_fe <-plm(patents ~ rnd + sales + employ, 
+             data=pdata,
+             model="within")
+
+summary(m_fe)
+
+
+##11modelo 3 efectos aleatorios 
+
+#supone que las direnceias entre empresas
+#no estan correlacionadas con las variables explicativas 
+
+m_re <-plm(patents ~ rnd + sales + employ, 
+             data=pdata,
+             model="random")
+
+summary(m_re)
+
+##################################
+#12)EXISTEN EFECTOS INDIVIDUALES ??
+#compara:
+#-pooled OLS VS EFECTOS FIJOS 
+
+pFtest(m_fe,m_pool)
+
+#Si p< 0.05: 
+#si hay heterogeneidad entre empresas 
+#pooled ols No es adecuado 
+
+
+##13PRUEBA DE HAUSMAN
+
+#Decide entre: 
+ # "Efectos fijos
+#efectos aleatorios
+
+phtest(m_fe,m_re)
+
+#Si p<0.05 
+#efectos fijos
+
+#Si p>0.05 
+#Efectos aleatorios
+
+
+```
+```
+
